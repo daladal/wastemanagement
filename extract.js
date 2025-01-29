@@ -11,44 +11,63 @@ process.stdin.on('data', chunk => {
 process.stdin.on('end', () => {
     try {
         const data = JSON.parse(inputData);
+        let newRow;
 
-        const extracted = {
-            address: data.address,
-            isServiceAvailable: data.wmData.is_service_available,
-            products: data.wmData.catalogs.map(catalog => ({
-                products: catalog.products.map(product => ({
-                    bundle:  product.bundle_type,
-                    pricing: product.attributes.map(attr => ({
-                        frequency: attr.frequency,
-                        q1Base:    attr.pricing.details[0].amount,
-                        q1AllIn:   attr.pricing.details[0].all_in_price,
-                        q2Base:    attr.pricing.details[1].amount,
-                        q2AllIn:   attr.pricing.details[1].all_in_price
+        if (inputData.length < 200) {
+            newRow = {
+                'Address': data.address,
+                'WM Service': 'Out of Range',
+                'Residential Base': '',
+                'Residential All In': '',
+                '2 Cans Base': '',
+                '2 Cans All In': '',
+                'Residential Frequency': '',
+                'Recycling Base': '',
+                'Recycling All In': '',
+                'Recycling 2 Cans Base': '',
+                'Recycling 2 Cans All In': '',
+                'Bundle': '',
+                'Recycling Frequency': ''
+            };
+        } else {
+            const extracted = {
+                address: data.address,
+                isServiceAvailable: data.wmData.is_service_available,
+                products: data.wmData.catalogs.map(catalog => ({
+                    products: catalog.products.map(product => ({
+                        bundle:  product.bundle_type,
+                        pricing: product.attributes.map(attr => ({
+                            frequency: attr.frequency,
+                            q1Base:    attr.pricing.details[0].amount,
+                            q1AllIn:   attr.pricing.details[0].all_in_price,
+                            q2Base:    attr.pricing.details[1].amount,
+                            q2AllIn:   attr.pricing.details[1].all_in_price
+                        }))
                     }))
                 }))
-            }))
-        };
-
-        console.log("Successfully retrieved WM data for", extracted.address);
-
-        const trash = extracted.products[0];
-        const recycling = extracted.products[1]; 
-
-        const newRow = {
-            'Address':                     extracted.address,
-            'WM Service':                  extracted.isServiceAvailable,
-            'Residential Base':        `$${trash.products[0].pricing[0].q1Base.toFixed(2)}`,
-            'Residential All In':      `$${trash.products[0].pricing[0].q1AllIn.toFixed(2)}`,
-            '2 Cans Base':             `$${trash.products[0].pricing[0].q2Base.toFixed(2)}`,
-            '2 Cans All In':           `$${trash.products[0].pricing[0].q2AllIn.toFixed(2)}`,
-            'Residential Frequency':       trash.products[0].pricing[0].frequency,
-            'Recycling Base':          `$${recycling.products[0].pricing[0].q1Base.toFixed(2)}`,
-            'Recycling All In':        `$${recycling.products[0].pricing[0].q1AllIn.toFixed(2)}`,
-            'RCY 2 Cans Base':         `$${recycling.products[0].pricing[0].q2Base.toFixed(2)}`,
-            'RCY 2 Cans All In':       `$${recycling.products[0].pricing[0].q2AllIn.toFixed(2)}`,
-            'Bundle':                      recycling.products[0].bundle,
-            'RCY Frequency':               recycling.products[0].pricing[0].frequency
-        };
+            };
+    
+            console.log("Successfully retrieved WM data for", extracted.address);
+    
+            const trash = extracted.products[0];
+            const recycling = extracted.products[1]; 
+    
+            newRow = {
+                'Address':                     extracted.address,
+                'WM Service':                  extracted.isServiceAvailable,
+                'Residential Base':        `$${trash.products[0].pricing[0].q1Base.toFixed(2)}`,
+                'Residential All In':      `$${trash.products[0].pricing[0].q1AllIn.toFixed(2)}`,
+                '2 Cans Base':             `$${trash.products[0].pricing[0].q2Base.toFixed(2)}`,
+                '2 Cans All In':           `$${trash.products[0].pricing[0].q2AllIn.toFixed(2)}`,
+                'Residential Frequency':       trash.products[0].pricing[0].frequency,
+                'Recycling Base':          `$${recycling.products[0].pricing[0].q1Base.toFixed(2)}`,
+                'Recycling All In':        `$${recycling.products[0].pricing[0].q1AllIn.toFixed(2)}`,
+                'RCY 2 Cans Base':         `$${recycling.products[0].pricing[0].q2Base.toFixed(2)}`,
+                'RCY 2 Cans All In':       `$${recycling.products[0].pricing[0].q2AllIn.toFixed(2)}`,
+                'Bundle':                      recycling.products[0].bundle,
+                'RCY Frequency':               recycling.products[0].pricing[0].frequency
+            };
+        }
 
         let workbook;
         if (fs.existsSync('/usr/src/app/output.xlsx')) {
